@@ -109,7 +109,7 @@ func TestAuthUnPack(t *testing.T) {
 	want.authResponseLen = 20
 	want.clientFlags = DefaultClientCapability
 	want.clientFlags |= sqldb.CLIENT_CONNECT_WITH_DB
-	want.authResponse = nativePassword("sbtest", DefaultSalt)
+	want.authResponse = NativePassword("sbtest", DefaultSalt)
 	want.database = "sbtest"
 	want.user = "sbtest"
 	want.pluginName = DefaultAuthPluginName
@@ -133,7 +133,7 @@ func TestAuthWithoutPWD(t *testing.T) {
 	want.authResponseLen = 0
 	want.clientFlags = DefaultClientCapability
 	want.clientFlags |= sqldb.CLIENT_CONNECT_WITH_DB
-	want.authResponse = nativePassword("", DefaultSalt)
+	want.authResponse = NativePassword("", DefaultSalt)
 	want.database = "sbtest"
 	want.user = "sbtest"
 	want.pluginName = DefaultAuthPluginName
@@ -156,7 +156,7 @@ func TestAuthWithoutDB(t *testing.T) {
 	want.charset = 0x02
 	want.authResponseLen = 20
 	want.clientFlags = DefaultClientCapability
-	want.authResponse = nativePassword("sbtest", DefaultSalt)
+	want.authResponse = NativePassword("sbtest", DefaultSalt)
 	want.user = "sbtest"
 	want.pluginName = DefaultAuthPluginName
 
@@ -179,7 +179,7 @@ func TestAuthWithoutSecure(t *testing.T) {
 	want.authResponseLen = 20
 	want.clientFlags = DefaultClientCapability &^ sqldb.CLIENT_SECURE_CONNECTION &^ sqldb.CLIENT_PLUGIN_AUTH_LENENC_CLIENT_DATA
 	want.clientFlags |= sqldb.CLIENT_CONNECT_WITH_DB
-	want.authResponse = nativePassword("password", DefaultSalt)
+	want.authResponse = NativePassword("password", DefaultSalt)
 	want.user = "root"
 	want.database = "test_db"
 	want.pluginName = DefaultAuthPluginName
@@ -203,7 +203,7 @@ func TestAuthWithoutPluginAuth(t *testing.T) {
 	want.charset = 0x02
 	want.authResponseLen = 20
 	want.clientFlags = DefaultClientCapability ^ sqldb.CLIENT_PLUGIN_AUTH
-	want.authResponse = nativePassword("sbtest", DefaultSalt)
+	want.authResponse = NativePassword("sbtest", DefaultSalt)
 	want.user = "sbtest"
 	want.database = "test_db"
 
