@@ -21,8 +21,8 @@ import (
 	"fmt"
 	"strings"
 
-	querypb "github.com/xelabs/go-mysqlstack/sqlparser/depends/query"
-	"github.com/xelabs/go-mysqlstack/sqlparser/depends/sqltypes"
+	querypb "github.com/launix-de/go-mysqlstack/sqlparser/depends/query"
+	"github.com/launix-de/go-mysqlstack/sqlparser/depends/sqltypes"
 )
 
 // ParsedQuery represents a parsed query where

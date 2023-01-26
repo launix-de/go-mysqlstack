@@ -2,7 +2,8 @@
  * go-mysqlstack
  * xelabs.org
  *
- * Copyright (c) XeLabs
+ * Copyright (c) 2021 XeLabs
+ * Copyright (c) 2023 Carl-Philip Hänsch
  * GPL License
  *
  */
@@ -15,13 +16,13 @@ import (
 	"sync"
 	"time"
 
-	"github.com/xelabs/go-mysqlstack/packet"
-	"github.com/xelabs/go-mysqlstack/proto"
-	"github.com/xelabs/go-mysqlstack/sqldb"
-	"github.com/xelabs/go-mysqlstack/xlog"
+	"github.com/launix-de/go-mysqlstack/packet"
+	"github.com/launix-de/go-mysqlstack/proto"
+	"github.com/launix-de/go-mysqlstack/sqldb"
+	"github.com/launix-de/go-mysqlstack/xlog"
 
-	"github.com/xelabs/go-mysqlstack/sqlparser/depends/common"
-	"github.com/xelabs/go-mysqlstack/sqlparser/depends/sqltypes"
+	"github.com/launix-de/go-mysqlstack/sqlparser/depends/common"
+	"github.com/launix-de/go-mysqlstack/sqlparser/depends/sqltypes"
 )
 
 // Session is a client connection with greeting and auth.

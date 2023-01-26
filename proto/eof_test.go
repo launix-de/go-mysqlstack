@@ -14,7 +14,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/xelabs/go-mysqlstack/sqlparser/depends/common"
+	"github.com/launix-de/go-mysqlstack/sqlparser/depends/common"
 )
 
 func TestEOF(t *testing.T) {

@@ -5,7 +5,7 @@
 package sqltypes
 
 import (
-	querypb "github.com/xelabs/go-mysqlstack/sqlparser/depends/query"
+	querypb "github.com/launix-de/go-mysqlstack/sqlparser/depends/query"
 )
 
 // ResultState enum.

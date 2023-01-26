@@ -10,10 +10,10 @@
 package driver
 
 import (
-	"github.com/xelabs/go-mysqlstack/proto"
-	"github.com/xelabs/go-mysqlstack/sqldb"
-	querypb "github.com/xelabs/go-mysqlstack/sqlparser/depends/query"
-	"github.com/xelabs/go-mysqlstack/sqlparser/depends/sqltypes"
+	"github.com/launix-de/go-mysqlstack/proto"
+	"github.com/launix-de/go-mysqlstack/sqldb"
+	querypb "github.com/launix-de/go-mysqlstack/sqlparser/depends/query"
+	"github.com/launix-de/go-mysqlstack/sqlparser/depends/sqltypes"
 )
 
 // Statement --

@@ -14,7 +14,7 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/xelabs/go-mysqlstack/xlog"
+	"github.com/launix-de/go-mysqlstack/xlog"
 )
 
 func TestSession(t *testing.T) {

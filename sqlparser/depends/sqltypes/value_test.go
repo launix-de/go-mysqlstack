@@ -11,8 +11,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/xelabs/go-mysqlstack/sqlparser/depends/common"
-	querypb "github.com/xelabs/go-mysqlstack/sqlparser/depends/query"
+	"github.com/launix-de/go-mysqlstack/sqlparser/depends/common"
+	querypb "github.com/launix-de/go-mysqlstack/sqlparser/depends/query"
 )
 
 func TestMake(t *testing.T) {

@@ -97,12 +97,12 @@
     </option>
   </component>
   <component name="RunManager">
-    <configuration name="TestKill in vendor/github.com/xelabs/go-mysqlstack/sqlparser" type="GoTestRunConfiguration" factoryName="Go Test" temporary="true" nameIsGenerated="true">
+    <configuration name="TestKill in vendor/github.com/launix-de/go-mysqlstack/sqlparser" type="GoTestRunConfiguration" factoryName="Go Test" temporary="true" nameIsGenerated="true">
       <module name="sqlparser" />
       <working_directory value="$PROJECT_DIR$" />
       <framework value="gotest" />
       <kind value="PACKAGE" />
-      <package value="vendor/github.com/xelabs/go-mysqlstack/sqlparser" />
+      <package value="vendor/github.com/launix-de/go-mysqlstack/sqlparser" />
       <directory value="$PROJECT_DIR$/" />
       <filePath value="$PROJECT_DIR$/" />
       <pattern value="^TestKill$" />
@@ -110,13 +110,13 @@
     </configuration>
     <recent_temporary>
       <list>
-        <item itemvalue="Go Test.TestKill in vendor/github.com/xelabs/go-mysqlstack/sqlparser" />
+        <item itemvalue="Go Test.TestKill in vendor/github.com/launix-de/go-mysqlstack/sqlparser" />
       </list>
     </recent_temporary>
   </component>
   <component name="TestHistory">
     <history-entry file="TestKill_in_vendor_github_com_xelabs_go-mysqlstack_sqlparser - 2019.04.04 at 12h 28m 32s.xml">
-      <configuration name="TestKill in vendor/github.com/xelabs/go-mysqlstack/sqlparser" configurationId="GoTestRunConfiguration" />
+      <configuration name="TestKill in vendor/github.com/launix-de/go-mysqlstack/sqlparser" configurationId="GoTestRunConfiguration" />
     </history-entry>
   </component>
   <component name="ToolWindowManager">

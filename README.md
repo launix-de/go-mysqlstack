@@ -1,5 +1,3 @@
-[![Build Status](https://travis-ci.org/xelabs/go-mysqlstack.png)](https://travis-ci.org/xelabs/go-mysqlstack) [![Go Report Card](https://goreportcard.com/badge/github.com/xelabs/go-mysqlstack)](https://goreportcard.com/report/github.com/xelabs/go-mysqlstack) [![codecov.io](https://codecov.io/gh/xelabs/go-mysqlstack/graphs/badge.svg)](https://codecov.io/gh/xelabs/go-mysqlstack/branch/master)
-
 # go-mysqlstack
 
 ***go-mysqlstack*** is an MySQL protocol library implementing in Go (golang).
@@ -11,8 +9,8 @@ Protocol is based on [mysqlproto-go](https://github.com/pubnative/mysqlproto-go)
 ```
 $ mkdir src
 $ export GOPATH=`pwd`
-$ go get -u github.com/xelabs/go-mysqlstack/driver
-$ cd src/github.com/xelabs/go-mysqlstack/
+$ go get -u github.com/launix-de/go-mysqlstack/driver
+$ cd src/github.com/launix-de/go-mysqlstack/
 $ make test
 ```
 
@@ -38,4 +36,4 @@ go-mysqlstack is production ready.
 
 ## License
 
-go-mysqlstack is released under the BSD-3-Clause License. See [LICENSE](https://github.com/xelabs/go-mysqlstack/blob/master/LICENSE)
+go-mysqlstack is released under the BSD-3-Clause License. See [LICENSE](https://github.com/launix-de/go-mysqlstack/blob/master/LICENSE)

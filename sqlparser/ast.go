@@ -19,7 +19,7 @@ package sqlparser
 import (
 	"strings"
 
-	"github.com/xelabs/go-mysqlstack/sqlparser/depends/sqltypes"
+	"github.com/launix-de/go-mysqlstack/sqlparser/depends/sqltypes"
 )
 
 // SQLNode defines the interface for all nodes
