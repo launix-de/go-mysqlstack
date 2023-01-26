@@ -15,6 +15,7 @@ import (
 	"net"
 	"sync"
 	"time"
+	"crypto/sha1"
 
 	"github.com/launix-de/go-mysqlstack/packet"
 	"github.com/launix-de/go-mysqlstack/proto"
