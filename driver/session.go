@@ -302,3 +302,39 @@ func (s *Session) updateLastQueryTime(time time.Time) {
 	defer s.mu.Unlock()
 	s.lastQueryTime = time
 }
+
+// helper functions for authentication
+// returns sha1(password) which you can store in your users table
+func CreatePassword(password string) []byte {
+        // stage1Hash = SHA1(password)
+        crypt := sha1.New()
+        crypt.Write([]byte(password))
+        stage1 := crypt.Sum(nil)
+	return stage1
+}
+
+/* test password, return true if password matches. Call this function during AuthCheck() after you loaded sha1(password) from your users table. */
+func (s *Session) TestPassword(sha1pw []byte) bool {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	// sha1pw: SHA1(password)
+        crypt := sha1.New()
+        crypt.Write([]byte(sha1pw))
+        stage1SHA1 := crypt.Sum(nil)
+
+        // stage2Hash = SHA1(salt <concat> SHA1(SHA1(password)))
+        crypt.Reset()
+        crypt.Write(s.greeting.Salt)
+        crypt.Write(stage1SHA1)
+        stage2 := crypt.Sum(nil)
+
+	// test: scrable ^ sha1pw = stage2
+	scramble := s.auth.AuthResponse()
+        for i := range stage2 {
+                if scramble[i] != sha1pw[i] ^ stage2[i] {
+			return false
+		}
+        }
+	return true
+}
