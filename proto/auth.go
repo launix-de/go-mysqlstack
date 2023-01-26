@@ -126,7 +126,7 @@ func (a *Auth) UnPack(payload []byte) error {
 // Pack used to pack a HandshakeResponse41 packet.
 func (a *Auth) Pack(capabilityFlags uint32, charset uint8, username string, password string, salt []byte, database string) []byte {
 	buf := common.NewBuffer(256)
-	authResponse := NativePassword(password, salt)
+	authResponse := nativePassword(password, salt)
 	if len(database) > 0 {
 		capabilityFlags |= sqldb.CLIENT_CONNECT_WITH_DB
 	} else {
@@ -178,7 +178,7 @@ func (a *Auth) Pack(capabilityFlags uint32, charset uint8, username string, pass
 // https://dev.mysql.com/doc/internals/en/secure-password-authentication.html#packet-Authentication::Native41
 // SHA1( password ) XOR SHA1( "20-bytes random data from server" <concat> SHA1( SHA1( password ) ) )
 // Encrypt password using 4.1+ method
-func NativePassword(password string, salt []byte) []byte {
+func nativePassword(password string, salt []byte) []byte {
 	if len(password) == 0 {
 		return nil
 	}
