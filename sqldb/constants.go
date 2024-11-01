@@ -209,6 +209,7 @@ const (
 // Originally found in include/mysql/mysql_com.h
 // See http://dev.mysql.com/doc/internals/en/status-flags.html
 const (
+	SERVER_STATUS_TRANSACTION = 0x0001
 	// SERVER_STATUS_AUTOCOMMIT is the default status of auto-commit.
 	SERVER_STATUS_AUTOCOMMIT = 0x0002
 )

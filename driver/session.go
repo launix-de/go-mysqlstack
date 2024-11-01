@@ -340,3 +340,11 @@ func (s *Session) TestPassword(sha1pw []byte) bool {
         }
 	return true
 }
+
+func (s *Session) SetTransaction(tx bool) {
+	if tx {
+		s.greeting.SetStatus(sqldb.SERVER_STATUS_TRANSACTION)
+	} else {
+		s.greeting.SetStatus(sqldb.SERVER_STATUS_AUTOCOMMIT)
+	}
+}

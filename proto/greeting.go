@@ -66,6 +66,9 @@ func byteRand(min int, max int) byte {
 func (g *Greeting) Status() uint16 {
 	return g.status
 }
+func (g *Greeting) SetStatus(status uint16) {
+	g.status = status
+}
 
 // Pack used to pack the greeting packet.
 // https://dev.mysql.com/doc/internals/en/connection-phase-packets.html#packet-Protocol::HandshakeV10
