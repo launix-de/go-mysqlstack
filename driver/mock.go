@@ -212,7 +212,7 @@ func (th *TestHandler) ComInitDB(s *Session, db string) error {
 }
 
 // ComQuery implements the interface.
-func (th *TestHandler) ComQuery(s *Session, query string, bindVariables map[string]*querypb.BindVariable, callback func(qr *sqltypes.Result) error) error {
+func (th *TestHandler) ComQuery(s *Session, query string, bindVariables map[string]*querypb.BindVariable, output *ResultWriter) error {
 	log := th.log
 	query = strings.ToLower(query)
 
@@ -233,18 +233,18 @@ func (th *TestHandler) ComQuery(s *Session, query string, bindVariables map[stri
 			case <-time.After(time.Millisecond * time.Duration(cond.Delay)):
 				log.Debug("mock.handler.delay.done...")
 			}
-			return callback(cond.Result)
+			return output.WriteResult(cond.Result)
 		case COND_ERROR:
 			return cond.Error
 		case COND_PANIC:
 			log.Panic("mock.handler.panic....")
 		case COND_NORMAL:
-			return callback(cond.Result)
+			return output.WriteResult(cond.Result)
 		case COND_STREAM:
 			flds := cond.Result.Fields
 			// Send Fields for stream.
 			qr := &sqltypes.Result{Fields: flds, State: sqltypes.RStateFields}
-			if err := callback(qr); err != nil {
+			if err := output.WriteResult(qr); err != nil {
 				return fmt.Errorf("mock.handler.send.stream.error:%+v", err)
 			}
 
@@ -252,14 +252,14 @@ func (th *TestHandler) ComQuery(s *Session, query string, bindVariables map[stri
 			for _, row := range cond.Result.Rows {
 				qr := &sqltypes.Result{Fields: flds, State: sqltypes.RStateRows}
 				qr.Rows = append(qr.Rows, row)
-				if err := callback(qr); err != nil {
+				if err := output.WriteResult(qr); err != nil {
 					return fmt.Errorf("mock.handler.send.stream.error:%+v", err)
 				}
 			}
 
 			// Send EOF for stream.
 			qr = &sqltypes.Result{Fields: flds, State: sqltypes.RStateFinished}
-			if err := callback(qr); err != nil {
+			if err := output.WriteResult(qr); err != nil {
 				return fmt.Errorf("mock.handler.send.stream.error:%+v", err)
 			}
 			return nil
@@ -280,7 +280,7 @@ func (th *TestHandler) ComQuery(s *Session, query string, bindVariables map[stri
 			}
 			th.mu.Unlock()
 		}
-		return callback(&sqltypes.Result{})
+		return output.WriteResult(&sqltypes.Result{})
 	}
 
 	th.mu.Lock()
@@ -293,7 +293,7 @@ func (th *TestHandler) ComQuery(s *Session, query string, bindVariables map[stri
 	}
 	for _, pat := range th.patterns {
 		if pat.expr.MatchString(query) {
-			return callback(pat.result)
+			return output.WriteResult(pat.result)
 		}
 	}
 
@@ -305,7 +305,7 @@ func (th *TestHandler) ComQuery(s *Session, query string, bindVariables map[stri
 			idx = v.idx
 			v.idx++
 		}
-		return callback(v.conds[idx].Result)
+		return output.WriteResult(v.conds[idx].Result)
 	}
 	return fmt.Errorf("mock.handler.query[%v].error[can.not.found.the.cond.please.set.first]", query)
 }

@@ -3,6 +3,7 @@
  * xelabs.org
  *
  * Copyright (c) XeLabs
+ * Copyright (C) 2026 Carl-Philip Haensch
  * GPL License
  *
  */
@@ -53,6 +54,12 @@ func (b *Buffer) Reset(data []byte) {
 // Datas returns the datas of the buffer.
 func (b *Buffer) Datas() []byte {
 	return b.buf[:b.pos]
+}
+
+// Clear resets a write buffer while retaining its backing storage.
+func (b *Buffer) Clear() {
+	b.pos = 0
+	b.seek = 0
 }
 
 // Length returns the last position of the buffer.

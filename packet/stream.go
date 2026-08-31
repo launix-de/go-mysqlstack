@@ -3,6 +3,7 @@
  * xelabs.org
  *
  * Copyright (c) XeLabs
+ * Copyright (C) 2026 Carl-Philip Haensch
  * GPL License
  *
  */
@@ -22,10 +23,11 @@ const (
 
 // Stream represents the stream tuple.
 type Stream struct {
-	pktMaxSize int
-	header     []byte
-	reader     *bufio.Reader
-	writer     *bufio.Writer
+	pktMaxSize  int
+	header      []byte
+	writeHeader [4]byte
+	reader      *bufio.Reader
+	writer      *bufio.Writer
 }
 
 // NewStream creates a new stream.
@@ -112,6 +114,33 @@ func (s *Stream) Append(data []byte) error {
 		sequence++
 	}
 	return nil
+}
+
+// appendPayload writes a payload with its packet header without allocating a
+// second contiguous header-plus-payload buffer. bufio.Writer copies the header
+// before this method reuses writeHeader for the next protocol packet.
+func (s *Stream) appendPayload(payload []byte, sequence byte) error {
+	for {
+		size := len(payload)
+		if size > s.pktMaxSize {
+			size = s.pktMaxSize
+		}
+		s.writeHeader[0] = byte(size)
+		s.writeHeader[1] = byte(size >> 8)
+		s.writeHeader[2] = byte(size >> 16)
+		s.writeHeader[3] = sequence
+		if _, err := s.writer.Write(s.writeHeader[:]); err != nil {
+			return err
+		}
+		if _, err := s.writer.Write(payload[:size]); err != nil {
+			return err
+		}
+		if size < s.pktMaxSize {
+			return nil
+		}
+		payload = payload[size:]
+		sequence++
+	}
 }
 
 // Flush used to flush the writer.

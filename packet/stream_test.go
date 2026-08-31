@@ -3,6 +3,7 @@
  * xelabs.org
  *
  * Copyright (c) XeLabs
+ * Copyright (C) 2026 Carl-Philip Haensch
  * GPL License
  *
  */
@@ -213,5 +214,28 @@ func TestStreamWriteOverMax(t *testing.T) {
 		assert.Equal(t, payload.Datas(), ptk.Datas)
 		_, err = rStream.Read()
 		assert.NotNil(t, err)
+	}
+}
+
+func TestStreamAppendPayloadChunks(t *testing.T) {
+	tests := []struct {
+		name    string
+		payload []byte
+		want    []byte
+	}{
+		{name: "empty", want: []byte{0, 0, 0, 7}},
+		{name: "short", payload: []byte{1, 2, 3}, want: []byte{3, 0, 0, 7, 1, 2, 3}},
+		{name: "exact", payload: []byte{1, 2, 3, 4}, want: []byte{4, 0, 0, 7, 1, 2, 3, 4, 0, 0, 0, 8}},
+		{name: "split", payload: []byte{1, 2, 3, 4, 5}, want: []byte{4, 0, 0, 7, 1, 2, 3, 4, 1, 0, 0, 8, 5}},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			conn := NewMockConn()
+			defer conn.Close()
+			stream := NewStream(conn, 4)
+			assert.NoError(t, stream.appendPayload(test.payload, 7))
+			assert.NoError(t, stream.Flush())
+			assert.Equal(t, test.want, conn.Datas())
+		})
 	}
 }
