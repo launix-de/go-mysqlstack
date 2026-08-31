@@ -3,6 +3,7 @@
  * xelabs.org
  *
  * Copyright (c) XeLabs
+ * Copyright (c) 2026 Carl-Philip Haensch
  * GPL License
  *
  */
@@ -102,6 +103,29 @@ func TestStatementExecute(t *testing.T) {
 	}
 	err = UnPackStatementExecute(datas, protoStmt, parseFn)
 	assert.Nil(t, err)
+}
+
+func TestStatementExecuteDecodesTextAndBlobParameters(t *testing.T) {
+	values := []sqltypes.Value{
+		sqltypes.MakeTrusted(sqltypes.Text, []byte("text value")),
+		sqltypes.MakeTrusted(sqltypes.Blob, []byte{0, 1, 2, 3}),
+	}
+	data, err := PackStatementExecute(17, values)
+	assert.NoError(t, err)
+
+	var decodedTypes []querypb.Type
+	parseFn := func(_ *common.Buffer, valueType querypb.Type) (interface{}, error) {
+		decodedTypes = append(decodedTypes, valueType)
+		return nil, nil
+	}
+	statement := &Statement{
+		ID:         17,
+		ParamCount: uint16(len(values)),
+		ParamsType: make([]int32, len(values)),
+		BindVars:   make(map[string]*querypb.BindVariable, len(values)),
+	}
+	assert.NoError(t, UnPackStatementExecute(data, statement, parseFn))
+	assert.Equal(t, []querypb.Type{querypb.Type_TEXT, querypb.Type_BLOB}, decodedTypes)
 }
 
 func TestStatementExecuteUnPackError(t *testing.T) {
