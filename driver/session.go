@@ -3,7 +3,7 @@
  * xelabs.org
  *
  * Copyright (c) 2021 XeLabs
- * Copyright (c) 2023 Carl-Philip Hänsch
+ * Copyright (c) 2023-2026 Carl-Philip Hänsch
  * GPL License
  *
  */
@@ -11,11 +11,11 @@
 package driver
 
 import (
+	"crypto/sha1"
 	"fmt"
 	"net"
 	"sync"
 	"time"
-	"crypto/sha1"
 
 	"github.com/launix-de/go-mysqlstack/packet"
 	"github.com/launix-de/go-mysqlstack/proto"
@@ -39,10 +39,14 @@ type Session struct {
 	lastQueryTime time.Time
 	statementID   uint32                // used to identify different statements for the same session.
 	statements    map[uint32]*Statement // Save the metadata of the session related to the prepare operation.
+	done          chan struct{}
+	doneOnce      sync.Once
+	queryCancel   func()
+	queryCancelID uint64
 }
 
 func newSession(log *xlog.Log, ID uint32, serverVersion string, conn net.Conn) *Session {
-	return &Session{
+	s := &Session{
 		id:            ID,
 		log:           log,
 		conn:          conn,
@@ -51,7 +55,10 @@ func newSession(log *xlog.Log, ID uint32, serverVersion string, conn net.Conn) *
 		packets:       packet.NewPackets(conn),
 		lastQueryTime: time.Now(),
 		statements:    make(map[uint32]*Statement),
+		done:          make(chan struct{}),
 	}
+	go s.watchDisconnect()
+	return s
 }
 
 func (s *Session) writeErrFromError(err error) error {
@@ -224,11 +231,70 @@ func (s *Session) writeStatementPrepareResult(stmt *Statement) error {
 
 // Close used to close the connection.
 func (s *Session) Close() {
-	s.mu.RLock()
-	defer s.mu.RUnlock()
-	if s.conn != nil {
-		s.conn.Close()
-		s.conn = nil
+	s.mu.Lock()
+	conn := s.conn
+	s.conn = nil
+	queryCancel := s.queryCancel
+	s.queryCancel = nil
+	s.mu.Unlock()
+	if queryCancel != nil {
+		queryCancel()
+	}
+	if conn != nil {
+		conn.Close()
+	}
+	s.doneOnce.Do(func() { close(s.done) })
+}
+
+// SetQueryCancel installs the cancellation callback for the statement running
+// on this connection. MySQL serializes statements within one session.
+func (s *Session) SetQueryCancel(cancel func()) uint64 {
+	s.mu.Lock()
+	if s.conn == nil {
+		s.mu.Unlock()
+		cancel()
+		return 0
+	}
+	s.queryCancelID++
+	id := s.queryCancelID
+	s.queryCancel = cancel
+	s.mu.Unlock()
+	return id
+}
+
+// ClearQueryCancel removes a callback only if it still belongs to this query.
+func (s *Session) ClearQueryCancel(id uint64) {
+	if id == 0 {
+		return
+	}
+	s.mu.Lock()
+	if s.queryCancelID == id {
+		s.queryCancel = nil
+	}
+	s.mu.Unlock()
+}
+
+// Done is closed once the client connection is gone.
+func (s *Session) Done() <-chan struct{} {
+	return s.done
+}
+
+func (s *Session) watchDisconnect() {
+	ticker := time.NewTicker(200 * time.Millisecond)
+	defer ticker.Stop()
+	for {
+		select {
+		case <-s.done:
+			return
+		case <-ticker.C:
+		}
+		s.mu.RLock()
+		conn := s.conn
+		s.mu.RUnlock()
+		if conn == nil || socketDisconnected(conn) {
+			s.Close()
+			return
+		}
 	}
 }
 
@@ -308,10 +374,10 @@ func (s *Session) updateLastQueryTime(time time.Time) {
 // helper functions for authentication
 // returns sha1(password) which you can store in your users table
 func CreatePassword(password string) []byte {
-        // stage1Hash = SHA1(password)
-        crypt := sha1.New()
-        crypt.Write([]byte(password))
-        stage1 := crypt.Sum(nil)
+	// stage1Hash = SHA1(password)
+	crypt := sha1.New()
+	crypt.Write([]byte(password))
+	stage1 := crypt.Sum(nil)
 	return stage1
 }
 
@@ -321,23 +387,23 @@ func (s *Session) TestPassword(sha1pw []byte) bool {
 	defer s.mu.RUnlock()
 
 	// sha1pw: SHA1(password)
-        crypt := sha1.New()
-        crypt.Write([]byte(sha1pw))
-        stage1SHA1 := crypt.Sum(nil)
+	crypt := sha1.New()
+	crypt.Write([]byte(sha1pw))
+	stage1SHA1 := crypt.Sum(nil)
 
-        // stage2Hash = SHA1(salt <concat> SHA1(SHA1(password)))
-        crypt.Reset()
-        crypt.Write(s.greeting.Salt)
-        crypt.Write(stage1SHA1)
-        stage2 := crypt.Sum(nil)
+	// stage2Hash = SHA1(salt <concat> SHA1(SHA1(password)))
+	crypt.Reset()
+	crypt.Write(s.greeting.Salt)
+	crypt.Write(stage1SHA1)
+	stage2 := crypt.Sum(nil)
 
 	// test: scrable ^ sha1pw = stage2
 	scramble := s.auth.AuthResponse()
-        for i := range stage2 {
-                if scramble[i] != sha1pw[i] ^ stage2[i] {
+	for i := range stage2 {
+		if scramble[i] != sha1pw[i]^stage2[i] {
 			return false
 		}
-        }
+	}
 	return true
 }
 

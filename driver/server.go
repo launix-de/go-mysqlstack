@@ -72,6 +72,19 @@ func NewListener(log *xlog.Log, address string, handler Handler) (*Listener, err
 	}, nil
 }
 
+// NewListenerFromNetListener creates a Listener around a caller-owned network
+// listener. This supports Unix sockets and preconfigured TCP listeners without
+// duplicating the MySQL protocol server.
+func NewListenerFromNetListener(log *xlog.Log, listener net.Listener, handler Handler) *Listener {
+	return &Listener{
+		log:          log,
+		address:      listener.Addr().String(),
+		handler:      handler,
+		listener:     listener,
+		connectionID: 1,
+	}
+}
+
 // Accept runs an accept loop until the listener is closed.
 func (l *Listener) Accept() {
 	runtime.GOMAXPROCS(runtime.NumCPU())
