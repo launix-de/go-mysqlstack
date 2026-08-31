@@ -36,7 +36,7 @@ type Handler interface {
 	SessionCheck(session *Session) error
 	AuthCheck(session *Session) error
 	ComInitDB(session *Session, database string) error
-	ComQuery(session *Session, query string, bindVariables map[string]*querypb.BindVariable, callback func(*sqltypes.Result) error) error
+	ComQuery(session *Session, query string, bindVariables map[string]*querypb.BindVariable, result *ResultWriter) error
 }
 
 // Listener is a connection handler.
@@ -253,9 +253,11 @@ func (l *Listener) handle(conn net.Conn, ID uint32) {
 			// COM_QUERY
 		case sqldb.COM_QUERY:
 			query := l.parserComQuery(data)
-			if err = l.handler.ComQuery(session, query, nil, func(qr *sqltypes.Result) error {
-				return session.writeTextRows(qr)
-			}); err != nil {
+			result := newResultWriter(session, TextRowMode)
+			if err = l.handler.ComQuery(session, query, nil, result); err == nil && !result.isFinished() {
+				err = result.Finish(0, 0, 0)
+			}
+			if err != nil {
 				log.Error("server.handle.query.from.session[%v].error:%+v.query[%s]", ID, err, query)
 				if werr := session.writeErrFromError(err); werr != nil {
 					return
@@ -295,9 +297,11 @@ func (l *Listener) handle(conn net.Conn, ID uint32) {
 				}
 			}
 
-			if err = l.handler.ComQuery(session, stmt.PrepareStmt, sqltypes.CopyBindVariables(stmt.BindVars), func(qr *sqltypes.Result) error {
-				return session.writeBinaryRows(qr)
-			}); err != nil {
+			result := newResultWriter(session, BinaryRowMode)
+			if err = l.handler.ComQuery(session, stmt.PrepareStmt, sqltypes.CopyBindVariables(stmt.BindVars), result); err == nil && !result.isFinished() {
+				err = result.Finish(0, 0, 0)
+			}
+			if err != nil {
 				log.Error("server.handle.stmt.prepare.from.session[%v].error:%+v", ID, err)
 				if werr := session.writeErrFromError(err); werr != nil {
 					return

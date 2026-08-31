@@ -85,8 +85,9 @@ func (s *Session) writeFields(result *sqltypes.Result) error {
 
 func (s *Session) appendTextRows(result *sqltypes.Result) error {
 	// 2. Append rows.
+	rowBuf := common.NewBuffer(256)
 	for _, row := range result.Rows {
-		rowBuf := common.NewBuffer(16)
+		rowBuf.Clear()
 		for _, val := range row {
 			if val.IsNull() {
 				rowBuf.WriteLenEncodeNUL()
@@ -104,10 +105,16 @@ func (s *Session) appendTextRows(result *sqltypes.Result) error {
 // http://dev.mysql.com/doc/internals/en/binary-protocol-resultset-row.html
 func (s *Session) appendBinaryRows(result *sqltypes.Result) error {
 	colCount := len(result.Fields)
+	nullMaskLen := (colCount + 7 + 2) / 8
+	rowBuf := common.NewBuffer(256)
 
 	for _, row := range result.Rows {
-		valBuf := common.NewBuffer(16)
-		nullMask := make([]byte, (colCount+7+2)/8)
+		rowBuf.Clear()
+		// OK header followed by the fixed-size NULL bitmap. Values can then be
+		// appended directly, avoiding a second value buffer and copy per row.
+		rowBuf.WriteU8(proto.OK_PACKET)
+		rowBuf.WriteZero(nullMaskLen)
+		nullMask := rowBuf.Datas()[1:]
 
 		for fieldPos, val := range row {
 			if val.IsNull() || (val.Raw() == nil) {
@@ -124,15 +131,9 @@ func (s *Session) appendBinaryRows(result *sqltypes.Result) error {
 			if err != nil {
 				return err
 			}
-			valBuf.WriteBytes(v)
+			rowBuf.WriteBytes(v)
 		}
 
-		rowBuf := common.NewBuffer(16)
-		// OK header.
-		rowBuf.WriteU8(proto.OK_PACKET)
-		// NULL-bitmap
-		rowBuf.WriteBytes(nullMask)
-		rowBuf.WriteBytes(valBuf.Datas())
 		if err := s.packets.Append(rowBuf.Datas()); err != nil {
 			return err
 		}

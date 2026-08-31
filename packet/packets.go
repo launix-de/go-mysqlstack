@@ -3,6 +3,7 @@
  * xelabs.org
  *
  * Copyright (c) XeLabs
+ * Copyright (C) 2026 Carl-Philip Haensch
  * GPL License
  *
  */
@@ -148,18 +149,7 @@ func (p *Packets) WriteERR(errorCode uint16, sqlState string, format string, arg
 // This is underlying packet unit.
 // NOTICE: SequenceID++
 func (p *Packets) Append(rawdata []byte) error {
-	pkt := common.NewBuffer(64)
-
-	// body length(24bits):
-	// payload length
-	pkt.WriteU24(uint32(len(rawdata)))
-
-	// SequenceID
-	pkt.WriteU8(p.seq)
-
-	// body
-	pkt.WriteBytes(rawdata)
-	if err := p.stream.Append(pkt.Datas()); err != nil {
+	if err := p.stream.appendPayload(rawdata, p.seq); err != nil {
 		return err
 	}
 	p.seq++
