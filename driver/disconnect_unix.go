@@ -10,6 +10,7 @@
 package driver
 
 import (
+	"errors"
 	"net"
 	"syscall"
 )
@@ -23,7 +24,7 @@ func socketDisconnected(conn net.Conn) bool {
 	}
 	raw, err := syscallConn.SyscallConn()
 	if err != nil {
-		return false
+		return errors.Is(err, net.ErrClosed)
 	}
 	closed := false
 	controlErr := raw.Read(func(fd uintptr) bool {
@@ -39,5 +40,8 @@ func socketDisconnected(conn net.Conn) bool {
 		}
 		return true
 	})
-	return controlErr == nil && closed
+	// A local close makes RawConn.Read fail before invoking the callback.
+	// Only a closed connection ends the session; a read deadline may expire
+	// while the connection remains usable.
+	return errors.Is(controlErr, net.ErrClosed) || closed
 }

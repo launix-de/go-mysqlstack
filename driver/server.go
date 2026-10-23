@@ -3,6 +3,7 @@
  * xelabs.org
  *
  * Copyright (c) XeLabs
+ * Copyright (c) 2026 Carl-Philip Hänsch
  * GPL License
  *
  */
@@ -166,6 +167,15 @@ func (l *Listener) handle(conn net.Conn, ID uint32) {
 	l.handler.SetServerVersion()
 
 	session := newSession(log, ID, l.handler.ServerVersion(), conn)
+	registered := false
+	defer func() {
+		// A MySQL session belongs to this connection, including failed
+		// handshakes. Stop its watcher before unregistering application state.
+		session.Close()
+		if registered {
+			l.handler.SessionClosed(session)
+		}
+	}()
 	// Session check.
 	if err = l.handler.SessionCheck(session); err != nil {
 		log.Warning("session[%v].check.failed.error:%+v", ID, err)
@@ -175,7 +185,7 @@ func (l *Listener) handle(conn net.Conn, ID uint32) {
 
 	// Session register.
 	l.handler.NewSession(session)
-	defer l.handler.SessionClosed(session)
+	registered = true
 
 	// Greeting packet.
 	greetingPkt = session.greeting.Pack()
