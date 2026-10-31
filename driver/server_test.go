@@ -3,6 +3,7 @@
  * xelabs.org
  *
  * Copyright (c) XeLabs
+ * Copyright (c) 2026 Carl-Philip Hänsch
  * GPL License
  *
  */
@@ -10,12 +11,14 @@
 package driver
 
 import (
+	"net"
+	"runtime"
 	"testing"
 	"time"
 
-	"github.com/stretchr/testify/assert"
 	"github.com/launix-de/go-mysqlstack/sqldb"
 	"github.com/launix-de/go-mysqlstack/xlog"
+	"github.com/stretchr/testify/assert"
 
 	querypb "github.com/launix-de/go-mysqlstack/sqlparser/depends/query"
 	"github.com/launix-de/go-mysqlstack/sqlparser/depends/sqltypes"
@@ -278,4 +281,26 @@ func TestServerSessionTimeUpdate(t *testing.T) {
 	}
 
 	assert.Equal(t, true, t2.UnixNano()-t1.UnixNano() > 0)
+}
+
+// Listening is library work: an application owns its process-wide scheduler
+// policy, including limits selected by GOMAXPROCS or the container runtime.
+func TestAcceptPreservesApplicationScheduler(t *testing.T) {
+	listener, err := net.Listen("tcp", "127.0.0.1:0")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := listener.Close(); err != nil {
+		t.Fatal(err)
+	}
+	server := NewListenerFromNetListener(nil, listener, nil)
+	previous := runtime.GOMAXPROCS(0)
+	defer runtime.GOMAXPROCS(previous)
+	for _, limit := range []int{1, 2} {
+		runtime.GOMAXPROCS(limit)
+		server.Accept()
+		if got := runtime.GOMAXPROCS(0); got != limit {
+			t.Errorf("Accept changed GOMAXPROCS from %d to %d", limit, got)
+		}
+	}
 }

@@ -13,7 +13,6 @@ package driver
 import (
 	"fmt"
 	"net"
-	"runtime"
 	"runtime/debug"
 	"strings"
 	"time"
@@ -88,7 +87,6 @@ func NewListenerFromNetListener(log *xlog.Log, listener net.Listener, handler Ha
 
 // Accept runs an accept loop until the listener is closed.
 func (l *Listener) Accept() {
-	runtime.GOMAXPROCS(runtime.NumCPU())
 	for {
 		conn, err := l.listener.Accept()
 		if err != nil {
